@@ -70,6 +70,12 @@ type APIProvider =
   | "spinrilla"
   | "audius";
 
+function getThumbnailUrl(song: Response) {
+  for (const entity of Object.values(song.entitiesByUniqueId)) {
+    if (entity.thumbnailUrl) return entity.thumbnailUrl;
+  }
+}
+
 startBot({
   token: Deno.env.get("TOKEN") as string,
   intents: ["Guilds", "GuildMessages"],
@@ -124,9 +130,11 @@ startBot({
           markDownOfSongUrls.push(`... [and more](${song.pageUrl})`);
         }
 
+        const thumbnailUrl = getThumbnailUrl(song);
         const embed: Embed = {
           description: markDownOfSongUrls.join("\n"),
           footer: { text: footer },
+          thumbnail: { url: thumbnailUrl },
         };
 
         await message.reply({ embed: embed }, false).catch(console.error);
