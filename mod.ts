@@ -22,18 +22,20 @@ type Response = {
   };
 
   entitiesByUniqueId: {
-    [entityUniqueId: string]: {
-      id: string;
-      type: "song" | "album";
-      title?: string;
-      artistName?: string;
-      thumbnailUrl?: string;
-      thumbnailWidth?: number;
-      thumbnailHeight?: number;
-      apiProvider: APIProvider;
-      platforms: Platform[];
-    };
+    [entityUniqueId: string]: Entry;
   };
+};
+
+type Entry = {
+  id: string;
+  type: "song" | "album";
+  title?: string;
+  artistName?: string;
+  thumbnailUrl?: string;
+  thumbnailWidth?: number;
+  thumbnailHeight?: number;
+  apiProvider: APIProvider;
+  platforms: Platform[];
 };
 
 type Platform =
@@ -71,9 +73,10 @@ type APIProvider =
   | "audius";
 
 function getThumbnailUrl(song: Response) {
-  for (const entity of Object.values(song.entitiesByUniqueId)) {
-    if (entity.thumbnailUrl) return entity.thumbnailUrl;
-  }
+  // sort in thumbnail image height and returns the largest image's url
+  const entities = Array.from(Object.values(song.entitiesByUniqueId));
+  entities.sort((a, b) => (a.thumbnailHeight ?? 0) - (b.thumbnailHeight ?? 0));
+  return entities.pop()?.thumbnailUrl;
 }
 
 startBot({
