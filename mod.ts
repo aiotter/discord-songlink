@@ -8,34 +8,67 @@ const songUrlRegexList = [
   /https?:\/\/.*?music\.apple\.com\/\S*/g,
 ];
 
-interface Music {
+type Response = {
   entityUniqueId: string;
-  linksByPlatform: LinksByPlatform;
-  pageUrl: string;
   userCountry: string;
-}
+  pageUrl: string;
+  linksByPlatform: {
+    [platform in Platform]: {
+      entityUniqueId: string;
+      url: string;
+      nativeAppUriMobile?: string;
+      nativeAppUriDesktop?: string;
+    };
+  };
 
-interface LinksByPlatform {
-  amazonMusic?: MusicPlatform;
-  amazonStore?: MusicPlatform;
-  deezer?: MusicPlatform;
-  appleMusic?: MusicPlatform;
-  itunes?: MusicPlatform;
-  napster?: MusicPlatform;
-  pandora?: MusicPlatform;
-  soundcloud?: MusicPlatform;
-  spotify?: MusicPlatform;
-  tidal?: MusicPlatform;
-  yandex?: MusicPlatform;
-  youtube?: MusicPlatform;
-  youtubeMusic?: MusicPlatform;
-}
+  entitiesByUniqueId: {
+    [entityUniqueId: string]: {
+      id: string;
+      type: "song" | "album";
+      title?: string;
+      artistName?: string;
+      thumbnailUrl?: string;
+      thumbnailWidth?: number;
+      thumbnailHeight?: number;
+      apiProvider: APIProvider;
+      platforms: Platform[];
+    };
+  };
+};
 
-interface MusicPlatform {
-  country: string;
-  url: string;
-  entityUniqueId: string;
-}
+type Platform =
+  | "spotify"
+  | "itunes"
+  | "appleMusic"
+  | "youtube"
+  | "youtubeMusic"
+  | "google"
+  | "googleStore"
+  | "pandora"
+  | "deezer"
+  | "tidal"
+  | "amazonStore"
+  | "amazonMusic"
+  | "soundcloud"
+  | "napster"
+  | "yandex"
+  | "spinrilla"
+  | "audius";
+
+type APIProvider =
+  | "spotify"
+  | "itunes"
+  | "youtube"
+  | "google"
+  | "pandora"
+  | "deezer"
+  | "tidal"
+  | "amazon"
+  | "soundcloud"
+  | "napster"
+  | "yandex"
+  | "spinrilla"
+  | "audius";
 
 startBot({
   token: Deno.env.get("TOKEN") as string,
@@ -58,7 +91,7 @@ startBot({
             encodeURIComponent(songUrl)
           }&userCountry=JP`,
         );
-        const song: Music = await response.json();
+        const song: Response = await response.json();
         const markDownOfSongUrls = [];
 
         if (song.linksByPlatform?.amazonMusic) {
