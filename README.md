@@ -2,6 +2,8 @@
 
 Powered by [Songlink/Odesli](https://odesli.co)
 
+<img width="363" alt="Screenshot" src="https://user-images.githubusercontent.com/37664775/124286377-d7a74c00-db89-11eb-9a54-6d6a69a5c407.png">
+
 ## Description
 When you post a song URL of Amazon Music, Apple Music, or Spotify, the bot adds links to other platforms.
 You can even get a link to YouTube.
