@@ -1,6 +1,7 @@
 import { startBot } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
 import { Embed } from "https://deno.land/x/discordeno@11.2.0/src/types/mod.ts";
 
+const countryCode = Deno.env.get("COUNTRY") ?? "JP";
 const footer = "Powered by Songlink/Odesli (and @aiotter)";
 const songUrlRegexList = [
   /https?:\/\/.*?spotify\.com\/\S*/g,
@@ -79,6 +80,12 @@ function getThumbnailUrl(song: Response) {
   return entities.pop()?.thumbnailUrl;
 }
 
+function getSongTitle(song: Response) {
+  for (const entry of Object.values(song.entitiesByUniqueId)) {
+    if (entry?.title) return entry.title;
+  }
+}
+
 startBot({
   token: Deno.env.get("TOKEN") as string,
   intents: ["Guilds", "GuildMessages"],
@@ -98,7 +105,7 @@ startBot({
         const response = await fetch(
           `https://api.song.link/v1-alpha.1/links?url=${
             encodeURIComponent(songUrl)
-          }&userCountry=JP`,
+          }&userCountry=${countryCode}`,
         );
         const song: Response = await response.json();
         const markDownOfSongUrls = [];
@@ -135,6 +142,7 @@ startBot({
 
         const thumbnailUrl = getThumbnailUrl(song);
         const embed: Embed = {
+          title: getSongTitle(song),
           description: markDownOfSongUrls.join("\n"),
           footer: { text: footer },
           thumbnail: { url: thumbnailUrl },
