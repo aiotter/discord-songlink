@@ -100,6 +100,7 @@ startBot({
     },
 
     messageCreate(message) {
+      if (message.isBot) return;
       let songUrls: string[] = [];
       songUrlRegexList.forEach((regex) => {
         const matched = message.content.match(regex);
