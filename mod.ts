@@ -1,4 +1,9 @@
-import { startBot } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
+import {
+  EditMessage,
+  endpoints,
+  rest,
+  startBot,
+} from "https://deno.land/x/discordeno@11.2.0/mod.ts";
 import { Embed } from "https://deno.land/x/discordeno@11.2.0/src/types/mod.ts";
 
 const countryCode = Deno.env.get("COUNTRY") ?? "JP";
@@ -148,7 +153,18 @@ startBot({
           thumbnail: { url: thumbnailUrl },
         };
 
-        await message.reply({ embed: embed }, false).catch(console.error);
+        await message.reply({ embeds: [embed] }, false).catch(console.error);
+        if (song.linksByPlatform.youtube) {
+          await message.channel?.send(song.linksByPlatform.youtube.url);
+        }
+
+        // FIXME: `message.edit` is not working now. Needs upstream bugfix.
+        // await message.edit({ flags: 4 }).catch(console.error);  // clear embeds
+        await rest.runMethod(
+          "patch",
+          endpoints.CHANNEL_MESSAGE(message.channelId, message.id),
+          { flags: 4 }, // clear embeds
+        ).catch(console.error);
       });
     },
   },
