@@ -1,5 +1,4 @@
 import {
-  EditMessage,
   endpoints,
   rest,
   startBot,
@@ -154,9 +153,20 @@ startBot({
           thumbnail: { url: thumbnailUrl },
         };
 
-        await message.reply({ embeds: [embed] }, false).catch(console.error);
-        if (song.linksByPlatform.youtube) {
-          await message.channel?.send(song.linksByPlatform.youtube.url);
+        // Send link for previewing songs
+        if (song.linksByPlatform.spotify) {
+          await message.reply(song.linksByPlatform.spotify.url, false)
+            .catch(console.error);
+          await message.send({ embeds: [embed] })
+            .catch(console.error);
+        } else if (song.linksByPlatform.youtube) {
+          await message.reply(song.linksByPlatform.youtube.url, false)
+            .catch(console.error);
+          await message.send({ embeds: [embed] })
+            .catch(console.error);
+        } else {
+          await message.reply({ embeds: [embed] }, false)
+            .catch(console.error);
         }
 
         // FIXME: `message.edit` is not working now. Needs upstream bugfix.
