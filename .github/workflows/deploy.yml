@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - master
+
+env:
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  TARGET_IP: ${{ secrets.TARGET_IP }}
+  TARGET_USER: ${{ secrets.TARGET_USER }}
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: 'Deploy'
+      run: |
+        set -e
+        TARGET_DIR=/home/$TARGET_USER/repo/github.com/$GITHUB_REPOSITORY
+        echo "$SECRET_KEY" > secret.pem
+        chmod 600 secret.pem
+        ssh-keyscan -H ${TARGET_IP} > known_hosts 2>&1
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.pem "${TARGET_USER}@${TARGET_IP}" <<EOS
+          set -e
+          cd "${TARGET_DIR}"
+          git fetch --all
+          git reset --hard origin/master
+          git pull origin master
+          sudo systemctl restart ${GITHUB_REPOSITORY#*/}
+        EOS
