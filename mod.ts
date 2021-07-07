@@ -1,4 +1,4 @@
-import { startBot } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
+import { startBot, MessageFlags } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
 import { Embed } from "https://deno.land/x/discordeno@11.2.0/src/types/mod.ts";
 
 const countryCode = Deno.env.get("COUNTRY") ?? "JP";
@@ -149,6 +149,7 @@ startBot({
         };
 
         await message.reply({ embed: embed }, false).catch(console.error);
+        await message.edit({ flags: MessageFlags.SuppressEmbeeds }).catch(console.error);
       });
     },
   },
