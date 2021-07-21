@@ -1,4 +1,7 @@
 import {
+  ButtonComponent,
+  DiscordButtonStyles,
+  DiscordMessageComponentTypes,
   endpoints,
   rest,
   startBot,
@@ -90,6 +93,53 @@ function getSongTitle(song: Response) {
   }
 }
 
+function createButtons(song: Response) {
+  const row: ButtonComponent[] = [];
+  if (song.linksByPlatform?.amazonMusic) {
+    row.push({
+      type: DiscordMessageComponentTypes.Button,
+      style: DiscordButtonStyles.Link,
+      url: song.linksByPlatform.amazonMusic.url,
+      label: "Amazon Music",
+    });
+  }
+  if (song.linksByPlatform?.appleMusic) {
+    row.push({
+      type: DiscordMessageComponentTypes.Button,
+      style: DiscordButtonStyles.Link,
+      url: song.linksByPlatform.appleMusic.url,
+      label: "Apple Music",
+    });
+  }
+
+  if (song.linksByPlatform?.spotify) {
+    row.push({
+      type: DiscordMessageComponentTypes.Button,
+      style: DiscordButtonStyles.Link,
+      url: song.linksByPlatform.spotify.url,
+      label: "Spotify",
+    });
+  }
+
+  if (song.linksByPlatform?.youtube) {
+    row.push({
+      type: DiscordMessageComponentTypes.Button,
+      style: DiscordButtonStyles.Link,
+      url: song.linksByPlatform.youtube.url,
+      label: "YouTube",
+    });
+  }
+
+  row.push({
+    type: DiscordMessageComponentTypes.Button,
+    style: DiscordButtonStyles.Link,
+    url: song.pageUrl,
+    label: row.length ? "More" : "Details",
+  });
+
+  return row;
+}
+
 startBot({
   token: Deno.env.get("TOKEN") as string,
   intents: ["Guilds", "GuildMessages"],
@@ -113,60 +163,40 @@ startBot({
           }&userCountry=${countryCode}`,
         );
         const song: Response = await response.json();
-        const markDownOfSongUrls = [];
-
-        if (song.linksByPlatform?.amazonMusic) {
-          markDownOfSongUrls.push(
-            `[Amazon Music](${song.linksByPlatform.amazonMusic.url})`,
-          );
-        }
-
-        if (song.linksByPlatform?.appleMusic) {
-          markDownOfSongUrls.push(
-            `[Apple Music](${song.linksByPlatform.appleMusic.url})`,
-          );
-        }
-
-        if (song.linksByPlatform?.spotify) {
-          markDownOfSongUrls.push(
-            `[Spotify](${song.linksByPlatform.spotify.url})`,
-          );
-        }
-
-        if (song.linksByPlatform?.youtube) {
-          markDownOfSongUrls.push(
-            `[YouTube](${song.linksByPlatform.youtube.url})`,
-          );
-        }
-
-        if (markDownOfSongUrls.length === 0) {
-          markDownOfSongUrls.push(`[Other platforms](${song.pageUrl})`);
-        } else {
-          markDownOfSongUrls.push(`... [and more](${song.pageUrl})`);
-        }
+        const buttons = createButtons(song);
 
         const thumbnailUrl = getThumbnailUrl(song);
         const embed: Embed = {
           title: getSongTitle(song),
-          description: markDownOfSongUrls.join("\n"),
           footer: { text: footer },
           thumbnail: { url: thumbnailUrl },
         };
 
         // Send link for previewing songs
         if (song.linksByPlatform.spotify) {
-          await message.reply(song.linksByPlatform.spotify.url, false)
-            .catch(console.error);
-          await message.send({ embeds: [embed] })
-            .catch(console.error);
+          await message.reply({
+            content: song.linksByPlatform.spotify.url,
+            components: [{
+              type: DiscordMessageComponentTypes.ActionRow,
+              components: <[ButtonComponent]> buttons,
+            }],
+          }, false).catch(console.error);
         } else if (song.linksByPlatform.youtube) {
-          await message.reply(song.linksByPlatform.youtube.url, false)
-            .catch(console.error);
-          await message.send({ embeds: [embed] })
-            .catch(console.error);
+          await message.reply({
+            content: song.linksByPlatform.youtube.url,
+            components: [{
+              type: DiscordMessageComponentTypes.ActionRow,
+              components: <[ButtonComponent]> buttons,
+            }],
+          }, false).catch(console.error);
         } else {
-          await message.reply({ embeds: [embed] }, false)
-            .catch(console.error);
+          await message.reply({
+            embeds: [embed],
+            components: [{
+              type: DiscordMessageComponentTypes.ActionRow,
+              components: <[ButtonComponent]> buttons,
+            }],
+          }, false).catch(console.error);
         }
 
         // FIXME: `message.edit` is not working now. Needs upstream bugfix.
